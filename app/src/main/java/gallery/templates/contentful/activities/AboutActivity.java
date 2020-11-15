@@ -7,24 +7,23 @@ import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
+//import butterknife.OnClick;
 import gallery.templates.contentful.R;
 
-public class AboutActivity extends AppCompatActivity {
+public class AboutActivity extends AppCompatActivity implements View.OnClickListener{
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_about);
-    ButterKnife.bind(this);
+//    ButterKnife.bind(this);
 
     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
   }
 
   @SuppressWarnings("unused")
-  @OnClick({R.id.btn_faq, R.id.btn_feedback, R.id.btn_contact, R.id.btn_license})
-  void onClickButton(View view) {
+  @Override
+  public void onClick(View v) {
     int urlResId;
-
-    switch (view.getId()) {
+    switch (v.getId()){
       case R.id.btn_faq:
         urlResId = R.string.url_faq;
         break;
@@ -47,4 +46,5 @@ public class AboutActivity extends AppCompatActivity {
 
     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getString(urlResId))));
   }
+
 }

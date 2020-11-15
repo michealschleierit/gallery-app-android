@@ -25,7 +25,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
+//import butterknife.OnClick;
 import butterknife.OnPageChange;
 import gallery.templates.contentful.R;
 import gallery.templates.contentful.fragments.GalleryInfoFragment;
@@ -43,7 +43,7 @@ import gallery.templates.contentful.ui.ViewUtils;
 import gallery.templates.contentful.vault.Gallery;
 import gallery.templates.contentful.vault.Image;
 
-public class GalleryActivity extends AppCompatActivity {
+public class GalleryActivity extends AppCompatActivity implements View.OnClickListener {
   private static final ArgbEvaluator EVALUATOR = new ArgbEvaluator();
 
   private SlideImageAdapter imageAdapter;
@@ -136,8 +136,13 @@ public class GalleryActivity extends AppCompatActivity {
     }
   }
 
-  @OnClick(R.id.star) void onClickStar(View v) {
-    toggleInfoContainer(v);
+  @Override
+  public void onClick(View v) {
+    switch (v.getId()){
+      case R.id.star:
+        toggleInfoContainer(v);
+        break;
+    }
   }
 
   private void initializeViews() {
