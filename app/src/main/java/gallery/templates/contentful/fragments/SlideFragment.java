@@ -1,8 +1,11 @@
 package gallery.templates.contentful.fragments;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -29,7 +33,7 @@ import gallery.templates.contentful.lib.Utils;
 import gallery.templates.contentful.ui.ViewUtils;
 import gallery.templates.contentful.vault.Image;
 
-public class SlideFragment extends Fragment implements Palette.PaletteAsyncListener {
+public class SlideFragment extends Fragment implements Palette.PaletteAsyncListener, View.OnClickListener{
   private Image image;
 
   private AsyncTask paletteTask;
@@ -45,6 +49,8 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
   private int colorDarkMuted;
 
   private int colorVibrant;
+
+  Context context;
 
   @BindView(R.id.photo) ImageView photo;
 
@@ -67,7 +73,7 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
   }
 
   @Override public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
-      @Nullable Bundle savedInstanceState) {
+                                     @Nullable Bundle savedInstanceState) {
     super.onCreateView(inflater, container, savedInstanceState);
     return inflater.inflate(R.layout.fragment_slide, container, false);
   }
@@ -78,8 +84,32 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
     ViewUtils.setViewHeight(photo, Const.IMAGE_HEIGHT, true);
     title.setText(image.title());
     caption.setText(image.caption());
+
+    photo.setOnClickListener(this);
+    title.setOnClickListener(this);
+    caption.setOnClickListener(this);
+
     applyColor();
     applyImage();
+  }
+
+  @Override
+  public void onClick(View v) {
+    context = this.getActivity();
+
+    switch (v.getId()){
+      case R.id.title:
+      case R.id.caption:
+        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText(image.photo().url(), image.photo().url());
+        clipboard.setPrimaryClip(clip);
+
+        Toast.makeText(context, "URL COPIED TO CLICKBOARD", Toast.LENGTH_SHORT).show();
+        break;
+      case R.id.photo:
+        startActivity( (new Intent(Intent.ACTION_VIEW, Uri.parse(image.photo().url())) ) );
+        break;
+    }
   }
 
   @Override public void onDestroy() {
@@ -119,8 +149,8 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
 
   private void sendPalette() {
     getActivity().sendBroadcast(attachColors(
-        new Intent(Intents.ACTION_COLORIZE)
-            .putExtra(Intents.EXTRA_IMAGE, Parcels.wrap(image))));
+            new Intent(Intents.ACTION_COLORIZE)
+                    .putExtra(Intents.EXTRA_IMAGE, Parcels.wrap(image))));
   }
 
   private Intent attachColors(Intent intent) {
@@ -148,17 +178,17 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
 
   private void displayPhoto() {
     Picasso.get().load(Utils.imageUrl(image.photo().url()))
-        .resize(Const.IMAGE_WIDTH, Const.IMAGE_HEIGHT)
-        .centerCrop()
-        .into(target = new TargetAdapter() {
-          @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-            SlideFragment.this.bitmap = bitmap;
-            applyImage();
-            paletteTask = new Palette.Builder(bitmap)
-                .maximumColorCount(32)
-                .generate(SlideFragment.this);
-          }
-        });
+            .resize(Const.IMAGE_WIDTH, Const.IMAGE_HEIGHT)
+            .centerCrop()
+            .into(target = new TargetAdapter() {
+              @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                SlideFragment.this.bitmap = bitmap;
+                applyImage();
+                paletteTask = new Palette.Builder(bitmap)
+                        .maximumColorCount(32)
+                        .generate(SlideFragment.this);
+              }
+            });
   }
 
   public int getColorVibrant() {
