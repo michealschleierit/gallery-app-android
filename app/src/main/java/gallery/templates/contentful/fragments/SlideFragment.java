@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.RequestCreator;
 import com.squareup.picasso.Target;
 
 import org.parceler.Parcels;
@@ -26,14 +27,16 @@ import androidx.palette.graphics.Palette;
 import butterknife.ButterKnife;
 import butterknife.BindView;
 import gallery.templates.contentful.R;
+import gallery.templates.contentful.activities.GalleryActivity;
 import gallery.templates.contentful.lib.Const;
+import gallery.templates.contentful.lib.ImageSizeInterface;
 import gallery.templates.contentful.lib.Intents;
 import gallery.templates.contentful.lib.TargetAdapter;
 import gallery.templates.contentful.lib.Utils;
 import gallery.templates.contentful.ui.ViewUtils;
 import gallery.templates.contentful.vault.Image;
 
-public class SlideFragment extends Fragment implements Palette.PaletteAsyncListener, View.OnClickListener{
+public class SlideFragment extends Fragment implements Palette.PaletteAsyncListener, View.OnClickListener, ImageSizeInterface{
   private Image image;
 
   private AsyncTask paletteTask;
@@ -41,6 +44,7 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
   private Target target;
 
   private Bitmap bitmap;
+  private Bitmap bitmap_fitted;
 
   private boolean hasPalette;
 
@@ -53,6 +57,8 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
   Context context;
 
   @BindView(R.id.photo) ImageView photo;
+
+  @BindView(R.id.photo_fitted) ImageView photo_fitted;
 
   @BindView(R.id.bottom) ViewGroup bottomContainer;
 
@@ -69,7 +75,7 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     extractIntentArguments();
-    displayPhoto();
+    displayPhoto(true);
   }
 
   @Override public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -85,12 +91,11 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
     title.setText(image.title());
     caption.setText(image.caption());
 
-    photo.setOnClickListener(this);
     title.setOnClickListener(this);
     caption.setOnClickListener(this);
 
     applyColor();
-    applyImage();
+    applyImage(false);
   }
 
   @Override
@@ -100,16 +105,20 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
     switch (v.getId()){
       case R.id.title:
       case R.id.caption:
+
         ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText(image.photo().url(), image.photo().url());
         clipboard.setPrimaryClip(clip);
 
         Toast.makeText(context, "URL COPIED TO CLICKBOARD", Toast.LENGTH_SHORT).show();
         break;
-      case R.id.photo:
-        startActivity( (new Intent(Intent.ACTION_VIEW, Uri.parse(image.photo().url())) ) );
-        break;
     }
+  }
+
+  @Override
+  public void onChangeImageSize(Boolean show_fitted_image) {
+    photo_fitted.setVisibility(show_fitted_image ? View.VISIBLE : View.GONE);
+    photo.setVisibility(show_fitted_image ? View.GONE : View.VISIBLE);
   }
 
   @Override public void onDestroy() {
@@ -160,9 +169,14 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
     return intent;
   }
 
-  private void applyImage() {
-    if (bitmap != null && photo != null) {
+  private void applyImage(Boolean is_fitted_image) {
+
+    if (bitmap != null && photo != null && !is_fitted_image) {
       photo.setImageBitmap(bitmap);
+    }
+
+    if (is_fitted_image && bitmap_fitted != null && photo_fitted != null) {
+      photo_fitted.setImageBitmap(bitmap_fitted);
     }
   }
 
@@ -176,17 +190,27 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
     }
   }
 
-  private void displayPhoto() {
-    Picasso.get().load(Utils.imageUrl(image.photo().url()))
+  private void displayPhoto(Boolean centerCrop) {
+    Picasso.get()
+            .load(Utils.imageUrl(image.photo().url()))
             .resize(Const.IMAGE_WIDTH, Const.IMAGE_HEIGHT)
             .centerCrop()
             .into(target = new TargetAdapter() {
               @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                 SlideFragment.this.bitmap = bitmap;
-                applyImage();
+                applyImage(false);
                 paletteTask = new Palette.Builder(bitmap)
                         .maximumColorCount(32)
                         .generate(SlideFragment.this);
+              }
+            });
+
+    Picasso.get()
+            .load(Utils.imageUrl(image.photo().url()))
+            .into(target = new TargetAdapter() {
+              @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                SlideFragment.this.bitmap_fitted = bitmap;
+                applyImage(true);
               }
             });
   }
@@ -202,4 +226,10 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
   public int getColorLightMuted() {
     return colorLightMuted;
   }
+
+
+  public interface ImageSizeInterface {
+    public void onChangeImageSize(Boolean show_fitted_image);
+  }
+
 }

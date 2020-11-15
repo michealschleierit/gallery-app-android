@@ -34,6 +34,7 @@ import gallery.templates.contentful.gallery.SlideFragmentAdapter;
 import gallery.templates.contentful.gallery.SlideImageAdapter;
 import gallery.templates.contentful.lib.Const;
 import gallery.templates.contentful.lib.Holder;
+import gallery.templates.contentful.lib.ImageSizeInterface;
 import gallery.templates.contentful.lib.Intents;
 import gallery.templates.contentful.lib.TransitionListenerAdapter;
 import gallery.templates.contentful.lib.Utils;
@@ -43,10 +44,12 @@ import gallery.templates.contentful.ui.ViewUtils;
 import gallery.templates.contentful.vault.Gallery;
 import gallery.templates.contentful.vault.Image;
 
-public class GalleryActivity extends AppCompatActivity implements View.OnClickListener {
+public class GalleryActivity extends AppCompatActivity implements View.OnClickListener{
   private static final ArgbEvaluator EVALUATOR = new ArgbEvaluator();
 
   private SlideImageAdapter imageAdapter;
+
+  ImageSizeInterface imageSizeInterface;
 
   private SlideFragmentAdapter fragmentAdapter;
 
@@ -69,6 +72,7 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_gallery);
+
     ButterKnife.bind(this);
 
     extractIntentArguments();
@@ -149,6 +153,7 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
     viewPager.setCurrentItem(gallery.images().indexOf(image));
     viewPager.setOffscreenPageLimit(getResources().getInteger(
         R.integer.gallery_pager_offscreen_limit));
+    star.setOnClickListener(this);
 
     repositionStar();
     ViewUtils.setViewHeight(infoContainer, Const.IMAGE_HEIGHT, true);
@@ -173,6 +178,8 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
     getSupportFragmentManager().beginTransaction()
         .add(R.id.info_container, galleryInfoFragment)
         .commit();
+    
+    this.imageSizeInterface = (ImageSizeInterface) galleryInfoFragment;
   }
 
   private void extractIntentArguments() {

@@ -30,4 +30,5 @@ public class Const {
   public static Integer IMAGE_WIDTH;
 
   public static Integer IMAGE_HEIGHT;
+
 }

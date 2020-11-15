@@ -33,4 +33,17 @@
       android:stateListAnimator="@anim/button_raise"
       android:alpha="0"/>
 
+  <gallery.templates.contentful.ui.FloatingActionButton
+      android:id="@+id/like"
+      android:layout_width="@dimen/fab_size"
+      android:layout_height="@dimen/fab_size"
+      android:src="@drawable/ic_fab_star"
+      android:background="@drawable/info_background"
+      android:layout_gravity="end"
+      android:layout_marginRight="76dp"
+      android:layout_marginEnd="76dp"
+      android:elevation="@dimen/button_elevation"
+      android:stateListAnimator="@anim/button_raise"
+      android:alpha="0"/>
+
 </merge>
