@@ -34,7 +34,6 @@ import gallery.templates.contentful.gallery.SlideFragmentAdapter;
 import gallery.templates.contentful.gallery.SlideImageAdapter;
 import gallery.templates.contentful.lib.Const;
 import gallery.templates.contentful.lib.Holder;
-import gallery.templates.contentful.lib.ImageSizeInterface;
 import gallery.templates.contentful.lib.Intents;
 import gallery.templates.contentful.lib.TransitionListenerAdapter;
 import gallery.templates.contentful.lib.Utils;
@@ -49,8 +48,6 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
 
   private SlideImageAdapter imageAdapter;
 
-  ImageSizeInterface imageSizeInterface;
-
   private SlideFragmentAdapter fragmentAdapter;
 
   private GalleryInfoFragment galleryInfoFragment;
@@ -64,6 +61,7 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
   @BindView(R.id.photo) ImageView photo;
 
   @BindView(R.id.star) FloatingActionButton star;
+  @BindView(R.id.fab_zoom) FloatingActionButton fab_zoom;
 
   @BindView(R.id.pager) LockableViewPager viewPager;
 
@@ -98,6 +96,7 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
   @Override public void onBackPressed() {
     if (Const.HAS_L) {
       if (isShowingInitialImage()) {
+        createAlphaAnimator(fab_zoom, false);
         createAlphaAnimator(star, false).withEndAction(new Runnable() {
           @Override public void run() {
             GalleryActivity.super.onBackPressed();
@@ -131,10 +130,10 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
       int rightDarkMuted = rightFragment.getColorDarkMuted();
 
       int vibrant = (Integer) EVALUATOR.evaluate(
-          positionOffset, leftVibrant, rightVibrant);
+              positionOffset, leftVibrant, rightVibrant);
 
       int darkMuted = (Integer) EVALUATOR.evaluate(
-          positionOffset, leftDarkMuted, rightDarkMuted);
+              positionOffset, leftDarkMuted, rightDarkMuted);
 
       colorizeButton(vibrant, darkMuted);
     }
@@ -146,14 +145,19 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
       case R.id.star:
         toggleInfoContainer(v);
         break;
+      case R.id.fab_zoom:
+        Const.DISPLAY_FITTED_IMAGE = !Const.DISPLAY_FITTED_IMAGE;
+        (fragmentAdapter.fragmentForPosition(viewPager.getCurrentItem())).onChangeImageSize();
+        break;
     }
   }
 
   private void initializeViews() {
     viewPager.setCurrentItem(gallery.images().indexOf(image));
     viewPager.setOffscreenPageLimit(getResources().getInteger(
-        R.integer.gallery_pager_offscreen_limit));
+            R.integer.gallery_pager_offscreen_limit));
     star.setOnClickListener(this);
+    fab_zoom.setOnClickListener(this);
 
     repositionStar();
     ViewUtils.setViewHeight(infoContainer, Const.IMAGE_HEIGHT, true);
@@ -173,13 +177,11 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
 
   private void attachGalleryInfoFragment() {
     galleryInfoFragment = (GalleryInfoFragment) GalleryInfoFragment
-        .instantiate(this, GalleryInfoFragment.class.getName(), getIntent().getExtras());
+            .instantiate(this, GalleryInfoFragment.class.getName(), getIntent().getExtras());
 
     getSupportFragmentManager().beginTransaction()
-        .add(R.id.info_container, galleryInfoFragment)
-        .commit();
-    
-    this.imageSizeInterface = (ImageSizeInterface) galleryInfoFragment;
+            .add(R.id.info_container, galleryInfoFragment)
+            .commit();
   }
 
   private void extractIntentArguments() {
@@ -208,7 +210,7 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
       SlideFragment slideFragment = fragmentAdapter.fragmentForPosition(viewPager.getCurrentItem());
 
       galleryInfoFragment.colorize(slideFragment.getColorDarkMuted(),
-          slideFragment.getColorVibrant(), slideFragment.getColorLightMuted());
+              slideFragment.getColorVibrant(), slideFragment.getColorLightMuted());
     }
 
     Animator animator;
@@ -230,10 +232,10 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
     if (Const.HAS_L) {
       float radius = Math.max(photo.getWidth(), photo.getHeight()) * 2.0f;
       animator = ViewUtils.toggleViewCircular(view, infoContainer, show, radius, duration,
-          startRunnable, endRunnable);
+              startRunnable, endRunnable);
     } else {
       animator = ViewUtils.toggleViewFade(infoContainer, show, duration,
-          startRunnable, endRunnable);
+              startRunnable, endRunnable);
     }
 
     animator.start();
@@ -242,6 +244,7 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
   private void repositionStar() {
     int fabSize = getResources().getDimensionPixelSize(R.dimen.fab_size);
     star.setTranslationY(Const.IMAGE_HEIGHT - (fabSize / 2.0f));
+    fab_zoom.setTranslationY(Const.IMAGE_HEIGHT - (fabSize / 2.0f));
   }
 
   private boolean isShowingInitialImage() {
@@ -255,17 +258,15 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
 
     if (Const.HAS_L) {
       ColorStateList stateList = new ColorStateList(
-          new int[][] {
-              new int[] { }
-          },
-          new int[] {
-              colorPressed
-          });
+              new int[][] { new int[] { }  },
+              new int[] { colorPressed });
 
       RippleDrawable rippleDrawable = new RippleDrawable(stateList, drawable, null);
       ViewUtils.setBackground(star, rippleDrawable);
+      ViewUtils.setBackground(fab_zoom, rippleDrawable);
     } else {
       ViewUtils.setBackground(star, drawable);
+      ViewUtils.setBackground(fab_zoom, drawable);
     }
   }
 
@@ -295,6 +296,7 @@ public class GalleryActivity extends AppCompatActivity implements View.OnClickLi
       if (star.getAlpha() == 0) {
         long startDelay = getResources().getInteger(R.integer.toggle_animation_duration);
         createAlphaAnimator(star, true).setStartDelay(startDelay).start();
+        createAlphaAnimator(fab_zoom, true).setStartDelay(startDelay).start();
       }
     }
   }

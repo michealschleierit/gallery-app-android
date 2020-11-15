@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,16 +28,14 @@ import androidx.palette.graphics.Palette;
 import butterknife.ButterKnife;
 import butterknife.BindView;
 import gallery.templates.contentful.R;
-import gallery.templates.contentful.activities.GalleryActivity;
 import gallery.templates.contentful.lib.Const;
-import gallery.templates.contentful.lib.ImageSizeInterface;
 import gallery.templates.contentful.lib.Intents;
 import gallery.templates.contentful.lib.TargetAdapter;
 import gallery.templates.contentful.lib.Utils;
 import gallery.templates.contentful.ui.ViewUtils;
 import gallery.templates.contentful.vault.Image;
 
-public class SlideFragment extends Fragment implements Palette.PaletteAsyncListener, View.OnClickListener, ImageSizeInterface{
+public class SlideFragment extends Fragment implements Palette.PaletteAsyncListener, View.OnClickListener{
   private Image image;
 
   private AsyncTask paletteTask;
@@ -87,12 +86,16 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     ButterKnife.bind(this, view);
+
     ViewUtils.setViewHeight(photo, Const.IMAGE_HEIGHT, true);
     title.setText(image.title());
     caption.setText(image.caption());
 
     title.setOnClickListener(this);
     caption.setOnClickListener(this);
+
+    photo_fitted.setVisibility(Const.DISPLAY_FITTED_IMAGE ? View.VISIBLE : View.GONE);
+    photo.setVisibility(!Const.DISPLAY_FITTED_IMAGE ? View.VISIBLE : View.GONE);
 
     applyColor();
     applyImage(false);
@@ -115,10 +118,9 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
     }
   }
 
-  @Override
-  public void onChangeImageSize(Boolean show_fitted_image) {
-    photo_fitted.setVisibility(show_fitted_image ? View.VISIBLE : View.GONE);
-    photo.setVisibility(show_fitted_image ? View.GONE : View.VISIBLE);
+  public void onChangeImageSize() {
+//    photo_fitted.setVisibility(Const.DISPLAY_FITTED_IMAGE ? View.VISIBLE : View.GONE);
+//    photo.setVisibility(!Const.DISPLAY_FITTED_IMAGE ? View.VISIBLE : View.GONE);
   }
 
   @Override public void onDestroy() {
@@ -226,10 +228,4 @@ public class SlideFragment extends Fragment implements Palette.PaletteAsyncListe
   public int getColorLightMuted() {
     return colorLightMuted;
   }
-
-
-  public interface ImageSizeInterface {
-    public void onChangeImageSize(Boolean show_fitted_image);
-  }
-
 }

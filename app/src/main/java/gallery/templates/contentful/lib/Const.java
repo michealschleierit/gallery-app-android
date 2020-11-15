@@ -31,4 +31,5 @@ public class Const {
 
   public static Integer IMAGE_HEIGHT;
 
+  public static Boolean DISPLAY_FITTED_IMAGE = false;
 }
